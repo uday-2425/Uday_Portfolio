@@ -1,0 +1,157 @@
+import { Link } from "react-scroll";
+import { useState, useEffect, useRef } from "react";
+
+function Navbar() {
+
+  const [active, setActive] = useState("home");
+  const [visible, setVisible] = useState(true);
+
+  const lastScroll = useRef(0);
+  const hideTimer = useRef(null);
+
+  const navItems = [
+    { id: "home", label: "Home" },
+    { id: "achievements", label: "Experience" },
+    { id: "projects", label: "Projects" },
+    { id: "certificates", label: "Certificates" },
+  ];
+
+  /* ── Scroll logic: hide on scroll down, show on scroll up ── */
+  useEffect(() => {
+
+    const handleScroll = () => {
+      const currentScroll = window.scrollY;
+
+      if (currentScroll < 80) {
+        setVisible(true);
+        clearTimeout(hideTimer.current);
+      } else if (currentScroll > lastScroll.current) {
+        // scrolling down — hide immediately
+        clearTimeout(hideTimer.current);
+        setVisible(false);
+      } else {
+        // scrolling up — show briefly then hide
+        setVisible(true);
+        clearTimeout(hideTimer.current);
+        hideTimer.current = setTimeout(() => setVisible(false), 2500);
+      }
+
+      lastScroll.current = currentScroll;
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(hideTimer.current);
+    };
+
+  }, []);
+
+
+  /* ── Mouse proximity: show when within 60px of top edge ── */
+  useEffect(() => {
+
+    const handleMouseMove = (e) => {
+
+      // ignore if we're at the very top already (always visible anyway)
+      if (window.scrollY < 80) return;
+
+      if (e.clientY <= 60) {
+        // near top — show and cancel any pending hide
+        clearTimeout(hideTimer.current);
+        setVisible(true);
+      } else if (e.clientY > 120) {
+        // moved away — start hide timer (2.5s)
+        clearTimeout(hideTimer.current);
+        hideTimer.current = setTimeout(() => setVisible(false), 2500);
+      }
+
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+
+  }, []);
+
+
+  return (
+    <nav
+      className={`fixed top-0 w-full z-50 transition-all duration-500
+      ${visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6 pointer-events-none"}
+      `}
+    >
+
+      {/* glass container */}
+      <div className="mx-auto max-w-[1400px] mt-4 px-6">
+
+        <div className="flex items-center justify-between h-16 px-10 rounded-2xl
+        backdrop-blur-xl bg-blue-300 border border-white/10
+        shadow-[0_0_20px_rgba(59,130,246,0.15)]">
+
+          {/* Logo */}
+          <div className="text-blue-400 font-semibold text-lg tracking-wider">
+            <img src="/us.svg" alt="US Logo" className="w-10 h-10 rounded-lg" />
+          </div>
+
+          {/* Nav Items */}
+          <ul className="flex gap-8 text-grey-400 text-[15px] font-medium">
+
+            {navItems.map((item) => (
+              <li key={item.id} className="relative group cursor-pointer">
+
+                <Link
+                  to={item.id}
+                  smooth={item.id !== "home"}
+                  duration={600}
+                  offset={item.id === "home" ? 0 : -80}
+                  onClick={(e) => {
+                    if (item.id === "home") {
+                      e.preventDefault();
+
+                      if (window.lenis) {
+                        window.lenis.scrollTo(0, {
+                          duration: 1.2,
+                        });
+                      } else {
+                        window.scrollTo({
+                          top: 0,
+                          behavior: "smooth",
+                        });
+                      }
+                    }
+                  }}
+                  onSetActive={() => setActive(item.id)}
+                  className={`transition duration-300 ${
+                    active === item.id
+                      ? "text-blue-400"
+                      : "hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+
+                <span
+                  className={`absolute left-0 -bottom-1 h-[2px] bg-blue-400 transition-all duration-300
+                  ${
+                    active === item.id
+                      ? "w-full"
+                      : "w-0 group-hover:w-full"
+                  }`}
+                />
+
+              </li>
+            ))}
+
+          </ul>
+
+        </div>
+
+      </div>
+
+    </nav>
+  );
+}
+
+export default Navbar;
