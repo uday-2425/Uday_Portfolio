@@ -10,7 +10,7 @@ import GlitchCursor from "./components/cursor";
 import Home from "./sections/Home";
 import Projects from "./sections/Projects";
 import Achievements from "./sections/Achievements";
-import Certificates from "./sections/Certificates";
+import Certificates from "./sections/Certificates"; //abcd
 
 gsap.registerPlugin(ScrollTrigger);
 
